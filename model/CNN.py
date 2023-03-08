@@ -10,38 +10,56 @@ class __CNN(nn.Module):
     def __init__(self, batch_norm=False):
         # Structure of the model
         super().__init__()
-        ## 32x32x3 image, 6 filters, 5x5 kernel, stride 1, padding 0, output 28x28x6
-        self.conv1 = nn.Conv2d(3, 6, 5, 1, 0)
+        ## 32x32x3 image, 6 filters, 5x5 kernel, output 28x28x6
+        self.conv1 = nn.Conv2d(3, 6, 5)
         self.conv1_bn = nn.BatchNorm2d(6)
         ## 6x28x28, 2x2 kernel, stride 2, padding 0, output 6x14x14
         self.pool1 = nn.MaxPool2d(2, 2)
-        self.pool1_bn = nn.BatchNorm2d(6)
-        ## 6x14x14 = 1176, 100 nodes output
-        self.fc1 = nn.Linear(6 * 14 * 14, 100)
-        self.fc1_bn = nn.BatchNorm1d(100)
-        ## 100 nodes input, 10 nodes output
-        self.fc2 = nn.Linear(100, 10)
+        ## 6x14x14 = 1176, 16 filters, 5x5 kernel, output 6x10x10
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.conv2_bn = nn.BatchNorm2d(16)
+        ## 16x10x10 = 1600, 2x2 kernel, stride 2, padding 0, output 16x5x5
+        self.pool2 = nn.MaxPool2d(2, 2)
+        ## 16x5x5 = 400, output 120 nodes
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc1_bn = nn.BatchNorm1d(120)
+        ## 120 nodes input, 84 nodes output
+        self.fc2 = nn.Linear(120, 84)
+        self.fc2_bn = nn.BatchNorm1d(84)
+        ## 84 nodes input, 10 nodes output
+        self.fc3 = nn.Linear(84, 10)
 
         # config batch normalization
         self.batch_norm = batch_norm
 
     def forward(self, x):
         # Forward pass
-        ## output 28x28x32
+        ## output 28x28x6
         x = self.conv1(x)
         x = self.conv1_bn(x) if self.batch_norm else x  # batch norm only if specified
         x = F.relu(x)
-        ## output 14x14x32 = 6272
+        ## output 14x14x6
         x = self.pool1(x)
-        x = self.pool1_bn(x) if self.batch_norm else x  # batch norm only if specified
+        ## output 10x10x16
+        x = self.conv2(x)
+        x = self.conv2_bn(x) if self.batch_norm else x  # batch norm only if specified
+        x = F.relu(x)
+        ## output 5x5x16
+        x = self.pool2(x)
+        ## flatten 10x10x6 = 600
         x = torch.flatten(x, 1)
-        ## output 100
+        ## output 120
         x = self.fc1(x)
         x = self.fc1_bn(x) if self.batch_norm else x  # batch norm only if specified
         x = F.relu(x)
-        ## output 10 classes
+        ## output 84
         x = self.fc2(x)
+        x = self.fc2_bn(x) if self.batch_norm else x  # batch norm only if specified
+        x = F.relu(x)
+        ## output 10
+        x = self.fc3(x)
         x = F.log_softmax(x, dim=1)
+        ## return output
         return x
 
 
@@ -58,6 +76,7 @@ def train(
     batch_size = wandb.config.batch_size
     batch_norm = wandb.config.batch_norm
     device = wandb.config.device
+    num_workers = wandb.config.num_workers
     seed = wandb.config.seed
 
     # Set model
@@ -87,17 +106,22 @@ def train(
     else:
         raise NotImplementedError
 
+    len_train = len(train_data)
+    len_val = len(val_data)
+
     # set batch size using dataloader
     train_data = torch.utils.data.DataLoader(
         train_data,
         batch_size=batch_size,
         shuffle=True,
+        num_workers=num_workers,
     )
 
     val_data = torch.utils.data.DataLoader(
         val_data,
         batch_size=batch_size,
         shuffle=True,
+        num_workers=num_workers,
     )
 
     # Iterate over epochs
@@ -127,8 +151,8 @@ def train(
             train_acc += torch.sum(pred == target.view_as(pred)).float()
 
         # Normalize loss and accuracy
-        train_loss /= len(train_data.dataset)
-        train_acc /= len(train_data.dataset)
+        train_loss /= len_train
+        train_acc /= len_train
 
         # Evaluate model
         model.eval()
@@ -150,8 +174,8 @@ def train(
                 val_acc += torch.sum(pred == target.view_as(pred)).float()
 
             # Normalize loss and accuracy
-            val_loss /= len(val_data.dataset)
-            val_acc /= len(val_data.dataset)
+            val_loss /= len_val
+            val_acc /= len_val
 
         # Log metrics to wandb
         wandb.log(
