@@ -7,34 +7,41 @@ import wandb
 
 
 class __CNN(nn.Module):
-    def __init__(self):
+    def __init__(self, batch_norm=False):
         # Structure of the model
         super().__init__()
         ## 32x32x3 image, 6 filters, 5x5 kernel, stride 1, padding 0, output 28x28x6
         self.conv1 = nn.Conv2d(3, 6, 5, 1, 0)
+        self.conv1_bn = nn.BatchNorm2d(6)
         ## 6x28x28, 2x2 kernel, stride 2, padding 0, output 6x14x14
         self.pool1 = nn.MaxPool2d(2, 2)
+        self.pool1_bn = nn.BatchNorm2d(6)
         ## 6x14x14 = 1176, 100 nodes output
         self.fc1 = nn.Linear(6 * 14 * 14, 100)
+        self.fc1_bn = nn.BatchNorm1d(100)
         ## 100 nodes input, 10 nodes output
         self.fc2 = nn.Linear(100, 10)
+
+        # config batch normalization
+        self.batch_norm = batch_norm
 
     def forward(self, x):
         # Forward pass
         ## output 28x28x32
         x = self.conv1(x)
+        x = self.conv1_bn(x) if self.batch_norm else x  # batch norm only if specified
         x = F.relu(x)
-        ## output 14x14x32
-        x = self.pool1(x)
         ## output 14x14x32 = 6272
+        x = self.pool1(x)
+        x = self.pool1_bn(x) if self.batch_norm else x  # batch norm only if specified
         x = torch.flatten(x, 1)
         ## output 100
         x = self.fc1(x)
+        x = self.fc1_bn(x) if self.batch_norm else x  # batch norm only if specified
         x = F.relu(x)
         ## output 10 classes
         x = self.fc2(x)
-        ## output 10 classes
-        x = F.softmax(x, dim=1)
+        x = F.log_softmax(x, dim=1)
         return x
 
 
@@ -46,13 +53,15 @@ def train(
     optimizer = wandb.config.optimizer
     learning_rate = wandb.config.learning_rate
     loss_function = wandb.config.loss_function
+    regularization = wandb.config.regularization
     epochs = wandb.config.epochs
     batch_size = wandb.config.batch_size
+    batch_norm = wandb.config.batch_norm
     device = wandb.config.device
     seed = wandb.config.seed
 
     # Set model
-    model = __CNN().to(device)
+    model = __CNN(batch_norm).to(device)
 
     # Set seed
     torch.manual_seed(seed)
@@ -62,9 +71,13 @@ def train(
 
     # Set optimizer
     if optimizer == "Adam":
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        optimizer = optim.Adam(
+            model.parameters(), lr=learning_rate, weight_decay=regularization
+        )
     elif optimizer == "SGD":
-        optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+        optimizer = optim.SGD(
+            model.parameters(), lr=learning_rate, weight_decay=regularization
+        )
     else:
         raise NotImplementedError
 

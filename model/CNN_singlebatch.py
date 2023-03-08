@@ -16,13 +16,15 @@ def train(
     optimizer = wandb.config.optimizer
     learning_rate = wandb.config.learning_rate
     loss_function = wandb.config.loss_function
+    regularization = wandb.config.regularization
     epochs = wandb.config.epochs
     batch_size = wandb.config.batch_size
+    batch_norm = wandb.config.batch_norm
     device = wandb.config.device
     seed = wandb.config.seed
 
     # Set model
-    model = __CNN().to(device)
+    model = __CNN(batch_norm).to(device)
 
     # Set seed
     torch.manual_seed(seed)
@@ -32,9 +34,13 @@ def train(
 
     # Set optimizer
     if optimizer == "Adam":
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        optimizer = optim.Adam(
+            model.parameters(), lr=learning_rate, weight_decay=regularization
+        )
     elif optimizer == "SGD":
-        optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+        optimizer = optim.SGD(
+            model.parameters(), lr=learning_rate, weight_decay=regularization
+        )
     else:
         raise NotImplementedError
 
