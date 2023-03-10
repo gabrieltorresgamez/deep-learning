@@ -5,7 +5,7 @@ import torch.optim as optim
 
 import wandb
 
-
+# TODO: Add 1 convolutional layer
 class __CNN(nn.Module):
     def __init__(self, batch_norm=False):
         # Structure of the model
@@ -72,6 +72,7 @@ def train(
     learning_rate = wandb.config.learning_rate
     loss_function = wandb.config.loss_function
     regularization = wandb.config.regularization
+    momentum = wandb.config.momentum
     epochs = wandb.config.epochs
     batch_size = wandb.config.batch_size
     batch_norm = wandb.config.batch_norm
@@ -91,11 +92,16 @@ def train(
     # Set optimizer
     if optimizer == "Adam":
         optimizer = optim.Adam(
-            model.parameters(), lr=learning_rate, weight_decay=regularization
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=regularization,
         )
     elif optimizer == "SGD":
         optimizer = optim.SGD(
-            model.parameters(), lr=learning_rate, weight_decay=regularization
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=regularization,
+            momentum=momentum,
         )
     else:
         raise NotImplementedError
