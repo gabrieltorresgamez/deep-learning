@@ -16,7 +16,9 @@ class ResNeXt50(li.LightningModule):
         super().__init__()
 
         # init a pretrained resnet
-        backbone = models.resnext50_32x4d(weights="DEFAULT")
+        backbone = models.resnext50_32x4d(
+            weights=models.ResNeXt50_32X4D_Weights.IMAGENET1K_V1, progress=True
+        )
         num_filters = backbone.fc.in_features
         layers = list(backbone.children())[:-1]
         self.feature_extractor = nn.Sequential(*layers)
