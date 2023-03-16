@@ -30,6 +30,7 @@ class Manager:
             accelerator=config.device,
             max_epochs=config.epochs,
             logger=WandbLogger(),
+            log_every_n_steps=1,
             enable_progress_bar=False,
         )
         train_dataloader = DataLoader(
@@ -51,6 +52,7 @@ class Manager:
             accelerator=config.device,
             max_epochs=config.epochs,
             logger=WandbLogger(),
+            log_every_n_steps=1,
             enable_progress_bar=False,
         )
         train_dataloader = DataLoader(
@@ -96,6 +98,7 @@ class Manager:
             accelerator=config.device,
             max_epochs=config.epochs,
             logger=WandbLogger(),
+            log_every_n_steps=1,
             enable_progress_bar=False,
         )
         train_dataloader = DataLoader(
@@ -117,6 +120,7 @@ class Manager:
             accelerator=config.device,
             max_epochs=config.epochs,
             logger=WandbLogger(),
+            log_every_n_steps=1,
             enable_progress_bar=False,
         )
         train_dataloader = DataLoader(

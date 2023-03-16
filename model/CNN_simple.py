@@ -38,7 +38,7 @@ class CNN(li.LightningModule):
         self.accuracy = tm.Accuracy(task="multiclass", num_classes=10)
 
         # define f1 score
-        self.f1 = tm.F1Score(task="multiclass", num_classes=10)
+        self.f1 = tm.F1Score(task="multiclass", num_classes=10, average="macro")
 
     def forward(self, x):
         ## output 28x28x6
@@ -87,8 +87,8 @@ class CNN(li.LightningModule):
         loss = self.loss_fn(output, target)
         acc = self.accuracy(output, target)
         f1 = self.f1(output, target)
-        self.log(name_loss, loss)
-        self.log(name_acc, acc)
-        self.log(name_f1, f1)
+        self.log(name_loss, loss, on_step=True, on_epoch=True)
+        self.log(name_acc, acc, on_step=True, on_epoch=True)
+        self.log(name_f1, f1, on_step=True, on_epoch=True)
 
         return loss
