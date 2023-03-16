@@ -22,128 +22,59 @@ class Manager:
         self.val_data = val_data
         self.model = model
 
-    def __run_CNN_simple(self):
-        run = wandb.init()
-        config = run.config
-        model = CNN_simple.CNN(config)
-        trainer = Trainer(
-            accelerator=config.device,
-            max_epochs=config.epochs,
+    def __get_dataloaders(self, batch_size):
+        train_dataloader = DataLoader(
+            self.train_data,
+            batch_size=batch_size,
+        )
+        val_dataloader = DataLoader(
+            self.val_data,
+            batch_size=batch_size,
+        )
+        return train_dataloader, val_dataloader
+
+    def __get_trainer(self, device, epochs):
+        return Trainer(
+            accelerator=device,
+            max_epochs=epochs,
             logger=WandbLogger(),
             log_every_n_steps=1,
             enable_progress_bar=False,
         )
-        train_dataloader = DataLoader(
-            self.train_data,
-            batch_size=config.batch_size,
-        )
-        val_dataloader = DataLoader(
-            self.val_data,
-            batch_size=config.batch_size,
-        )
-        trainer.fit(model, train_dataloader, val_dataloader)
-        run.finish()
 
-    def __run_CNN(self):
-        run = wandb.init()
-        config = run.config
-        model = CNN.CNN(config)
-        trainer = Trainer(
-            accelerator=config.device,
-            max_epochs=config.epochs,
-            logger=WandbLogger(),
-            log_every_n_steps=1,
-            enable_progress_bar=False,
-        )
-        train_dataloader = DataLoader(
-            self.train_data,
-            batch_size=config.batch_size,
-        )
-        val_dataloader = DataLoader(
-            self.val_data,
-            batch_size=config.batch_size,
-        )
-        trainer.fit(model, train_dataloader, val_dataloader)
-        run.finish()
-
-    def __run_CNN_singlebatch(self):
-        run = wandb.init()
-        config = run.config
-        model = CNN.CNN(config)
-        trainer = Trainer(
-            accelerator=config.device,
-            max_epochs=config.epochs,
+    def __get_trainer_singlebatch(self, device, epochs):
+        return Trainer(
+            accelerator=device,
+            max_epochs=epochs,
             limit_train_batches=1,
             limit_val_batches=1,
             logger=WandbLogger(),
             log_every_n_steps=1,
             enable_progress_bar=False,
         )
-        train_dataloader = DataLoader(
-            self.train_data,
-            batch_size=config.batch_size,
-        )
-        val_dataloader = DataLoader(
-            self.val_data,
-            batch_size=config.batch_size,
-        )
-        trainer.fit(model, train_dataloader, val_dataloader)
-        run.finish()
 
-    def __run_MLP(self):
+    def __run_helper(self, model, singlebatch=False):
         run = wandb.init()
         config = run.config
-        model = MLP.MLP(config)
-        trainer = Trainer(
-            accelerator=config.device,
-            max_epochs=config.epochs,
-            logger=WandbLogger(),
-            log_every_n_steps=1,
-            enable_progress_bar=False,
-        )
-        train_dataloader = DataLoader(
-            self.train_data,
-            batch_size=config.batch_size,
-        )
-        val_dataloader = DataLoader(
-            self.val_data,
-            batch_size=config.batch_size,
-        )
-        trainer.fit(model, train_dataloader, val_dataloader)
-        run.finish()
-
-    def __run_SE_ResNeXt_50(self):
-        run = wandb.init()
-        config = run.config
-        model = SE_ResNeXt_50.ResNeXt50(config)
-        trainer = Trainer(
-            accelerator=config.device,
-            max_epochs=config.epochs,
-            logger=WandbLogger(),
-            log_every_n_steps=1,
-            enable_progress_bar=False,
-        )
-        train_dataloader = DataLoader(
-            self.train_data,
-            batch_size=config.batch_size,
-        )
-        val_dataloader = DataLoader(
-            self.val_data,
-            batch_size=config.batch_size,
-        )
+        model = model(config)
+        if singlebatch:
+            trainer = self.__get_trainer_singlebatch(config.device, config.epochs)
+        else:
+            trainer = self.__get_trainer(config.device, config.epochs)
+        train_dataloader, val_dataloader = self.__get_dataloaders(config.batch_size)
         trainer.fit(model, train_dataloader, val_dataloader)
         run.finish()
 
     def run(self):
         if self.model == "CNN_simple":
-            self.__run_CNN_simple()
+            self.__run_helper(CNN_simple.CNN)
         elif self.model == "CNN":
-            self.__run_CNN()
+            self.__run_helper(CNN.CNN)
         elif self.model == "CNN_singlebatch":
-            self.__run_CNN_singlebatch()
+            self.__run_helper(CNN.CNN, singlebatch=True)
         elif self.model == "MLP":
-            self.__run_MLP()
+            self.__run_helper(MLP.MLP)
         elif self.model == "SE_ResNeXt_50":
-            self.__run_SE_ResNeXt_50()
+            self.__run_helper(SE_ResNeXt_50.ResNeXt50)
         else:
             raise NotImplementedError
