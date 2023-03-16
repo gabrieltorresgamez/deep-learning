@@ -133,4 +133,7 @@ SGDS_DEL_MC*.pdf
 
 # Dataset
 data/
+
+# Logs and runs
 wandb/
+lightning_logs/

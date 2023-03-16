@@ -1,9 +1,14 @@
 import wandb
+
 import model.MLP as MLP
 import model.CNN as CNN
 import model.CNN_simple as CNN_simple
-import model.CNN_singlebatch as CNN_singlebatch
 import model.SE_ResNeXt_50 as SE_ResNeXt_50
+
+from torch.utils.data import DataLoader
+
+from pytorch_lightning import Trainer
+from pytorch_lightning.loggers import WandbLogger
 
 
 class Manager:
@@ -18,33 +23,111 @@ class Manager:
         self.model = model
 
     def __run_CNN_simple(self):
-        # Initialize wandb
         run = wandb.init()
-        CNN_simple.train(self.train_data, self.val_data)
+        config = run.config
+        model = CNN_simple.CNN(config)
+        trainer = Trainer(
+            accelerator=config.device,
+            max_epochs=config.epochs,
+            logger=WandbLogger(),
+            enable_progress_bar=False,
+        )
+        train_dataloader = DataLoader(
+            self.train_data,
+            batch_size=config.batch_size,
+        )
+        val_dataloader = DataLoader(
+            self.val_data,
+            batch_size=config.batch_size,
+        )
+        trainer.fit(model, train_dataloader, val_dataloader)
         run.finish()
 
     def __run_CNN(self):
-        # Initialize wandb
         run = wandb.init()
-        CNN.train(self.train_data, self.val_data)
+        config = run.config
+        model = CNN.CNN(config)
+        trainer = Trainer(
+            accelerator=config.device,
+            max_epochs=config.epochs,
+            logger=WandbLogger(),
+            enable_progress_bar=False,
+        )
+        train_dataloader = DataLoader(
+            self.train_data,
+            batch_size=config.batch_size,
+        )
+        val_dataloader = DataLoader(
+            self.val_data,
+            batch_size=config.batch_size,
+        )
+        trainer.fit(model, train_dataloader, val_dataloader)
         run.finish()
 
     def __run_CNN_singlebatch(self):
-        # Initialize wandb
         run = wandb.init()
-        CNN_singlebatch.train(self.train_data, self.val_data)
+        config = run.config
+        model = CNN.CNN(config)
+        trainer = Trainer(
+            accelerator=config.device,
+            max_epochs=config.epochs,
+            limit_train_batches=1,
+            limit_val_batches=1,
+            logger=WandbLogger(),
+            log_every_n_steps=1,
+            enable_progress_bar=False,
+        )
+        train_dataloader = DataLoader(
+            self.train_data,
+            batch_size=config.batch_size,
+        )
+        val_dataloader = DataLoader(
+            self.val_data,
+            batch_size=config.batch_size,
+        )
+        trainer.fit(model, train_dataloader, val_dataloader)
         run.finish()
 
     def __run_MLP(self):
-        # Initialize wandb
         run = wandb.init()
-        MLP.train(self.train_data, self.val_data)
+        config = run.config
+        model = MLP.MLP(config)
+        trainer = Trainer(
+            accelerator=config.device,
+            max_epochs=config.epochs,
+            logger=WandbLogger(),
+            enable_progress_bar=False,
+        )
+        train_dataloader = DataLoader(
+            self.train_data,
+            batch_size=config.batch_size,
+        )
+        val_dataloader = DataLoader(
+            self.val_data,
+            batch_size=config.batch_size,
+        )
+        trainer.fit(model, train_dataloader, val_dataloader)
         run.finish()
 
     def __run_SE_ResNeXt_50(self):
-        # Initialize wandb
         run = wandb.init()
-        SE_ResNeXt_50.train(self.train_data, self.val_data)
+        config = run.config
+        model = SE_ResNeXt_50.ResNeXt50(config)
+        trainer = Trainer(
+            accelerator=config.device,
+            max_epochs=config.epochs,
+            logger=WandbLogger(),
+            enable_progress_bar=False,
+        )
+        train_dataloader = DataLoader(
+            self.train_data,
+            batch_size=config.batch_size,
+        )
+        val_dataloader = DataLoader(
+            self.val_data,
+            batch_size=config.batch_size,
+        )
+        trainer.fit(model, train_dataloader, val_dataloader)
         run.finish()
 
     def run(self):
