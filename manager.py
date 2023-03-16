@@ -16,11 +16,9 @@ class Manager:
         self,
         train_data,
         val_data,
-        model,
     ):
         self.train_data = train_data
         self.val_data = val_data
-        self.model = model
 
     def __get_dataloaders(self, batch_size):
         train_dataloader = DataLoader(
@@ -53,28 +51,33 @@ class Manager:
             enable_progress_bar=False,
         )
 
-    def __run_helper(self, model, singlebatch=False):
+    def __get_model(self, model):
+        if model in ["CNN", "CNN_singlebatch"]:
+            return CNN.CNN
+        elif model == "CNN_simple":
+            return CNN_simple.CNN
+        elif model == "MLP":
+            return MLP.MLP
+        elif model == "SE_ResNeXt_50":
+            return SE_ResNeXt_50.ResNeXt50
+        else:
+            raise NotImplementedError
+
+    def run(self):
+        # setup wandb
         run = wandb.init()
         config = run.config
+        # setup model with wandb sweep config
+        model = self.__get_model(config.model)
         model = model(config)
-        if singlebatch:
+        # setup trainer
+        if "singlebatch" in config.model:
             trainer = self.__get_trainer_singlebatch(config.device, config.epochs)
         else:
             trainer = self.__get_trainer(config.device, config.epochs)
+        # setup dataloaders
         train_dataloader, val_dataloader = self.__get_dataloaders(config.batch_size)
+        # train model using pytorch lightning
         trainer.fit(model, train_dataloader, val_dataloader)
+        # finish wandb run
         run.finish()
-
-    def run(self):
-        if self.model == "CNN_simple":
-            self.__run_helper(CNN_simple.CNN)
-        elif self.model == "CNN":
-            self.__run_helper(CNN.CNN)
-        elif self.model == "CNN_singlebatch":
-            self.__run_helper(CNN.CNN, singlebatch=True)
-        elif self.model == "MLP":
-            self.__run_helper(MLP.MLP)
-        elif self.model == "SE_ResNeXt_50":
-            self.__run_helper(SE_ResNeXt_50.ResNeXt50)
-        else:
-            raise NotImplementedError
