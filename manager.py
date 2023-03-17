@@ -1,5 +1,7 @@
 import wandb
 
+import utils.WeightsInit as WeightsInit
+
 import model.MLP as MLP
 import model.CNN as CNN
 import model.CNN_simple as CNN_simple
@@ -33,6 +35,7 @@ class Manager:
 
     def __get_trainer(self, device, epochs):
         return Trainer(
+            precision=16,
             accelerator=device,
             max_epochs=epochs,
             logger=WandbLogger(),
@@ -42,6 +45,7 @@ class Manager:
 
     def __get_trainer_singlebatch(self, device, epochs):
         return Trainer(
+            precision=16,
             accelerator=device,
             max_epochs=epochs,
             limit_train_batches=1,
@@ -63,13 +67,20 @@ class Manager:
         else:
             raise NotImplementedError
 
+    def __init_weights_func(self, weights_init_type):
+        return WeightsInit.WeightsInit(weights_init_type).init_weights
+
     def run(self):
         # setup wandb
         run = wandb.init()
         config = run.config
+
         # setup model with wandb sweep config
         model = self.__get_model(config.model)
         model = model(config)
+        model = model.apply(self.__init_weights_func(config.weights_init_type))
+        # model = torch.compile(model)  # PyTorch 2.0 awaiting fix https://github.com/pytorch/pytorch/pull/96980
+
         # setup trainer
         if "singlebatch" in config.model:
             trainer = self.__get_trainer_singlebatch(config.device, config.epochs)
