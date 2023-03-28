@@ -2,10 +2,10 @@ import wandb
 
 import utils.WeightsInit as WeightsInit
 
-import model.MLP as MLP
-import model.CNN as CNN
-import model.CNN_simple as CNN_simple
-import model.SE_ResNeXt_50 as SE_ResNeXt_50
+import models.MLP as MLP
+import models.CNN as CNN
+import models.CNN_simple as CNN_simple
+import models.SE_ResNeXt_50 as SE_ResNeXt_50
 
 from torch.utils.data import DataLoader
 
