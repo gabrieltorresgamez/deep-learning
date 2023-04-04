@@ -2,9 +2,7 @@ import wandb
 
 import utils.WeightsInit as WeightsInit
 
-import models.MLP as MLP
 import models.CNN as CNN
-import models.CNN_simple as CNN_simple
 import models.SE_ResNeXt_50 as SE_ResNeXt_50
 
 from torch.utils.data import DataLoader
@@ -44,24 +42,9 @@ class Manager:
             enable_progress_bar=False,
         )
 
-    def __get_trainer_singlebatch(self, device, epochs):
-        return Trainer(
-            accelerator=device,
-            max_epochs=epochs,
-            limit_train_batches=1,
-            limit_val_batches=1,
-            logger=WandbLogger(),
-            log_every_n_steps=1,
-            enable_progress_bar=False,
-        )
-
     def __get_model(self, model):
-        if model in ["CNN", "CNN_singlebatch"]:
+        if model == "CNN":
             return CNN.CNN
-        elif model == "CNN_simple":
-            return CNN_simple.CNN
-        elif model == "MLP":
-            return MLP.MLP
         elif model == "SE_ResNeXt_50":
             return SE_ResNeXt_50.ResNeXt50
         else:
@@ -79,13 +62,10 @@ class Manager:
         model = self.__get_model(config.model)
         model = model(config)
         model = model.apply(self.__init_weights_func(config.weights_init_type))
-        #model = torch.compile(model)
+        # model = torch.compile(model)
 
         # setup trainer
-        if "singlebatch" in config.model:
-            trainer = self.__get_trainer_singlebatch(config.device, config.epochs)
-        else:
-            trainer = self.__get_trainer(config.device, config.epochs)
+        trainer = self.__get_trainer(config.device, config.epochs)
         # setup dataloaders
         train_dataloader, val_dataloader = self.__get_dataloaders(config.batch_size)
         # train model using pytorch lightning
