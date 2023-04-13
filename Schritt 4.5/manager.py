@@ -4,6 +4,7 @@ import utils.WeightsInit as WeightsInit
 
 import models.CNN as CNN
 import models.SE_ResNeXt_50 as SE_ResNeXt_50
+import models.ChatGPT as ChatGPT
 
 from torch.utils.data import DataLoader
 
@@ -49,6 +50,8 @@ class Manager:
             return CNN.CNN
         elif model == "SE_ResNeXt_50":
             return SE_ResNeXt_50.ResNeXt50
+        elif model == "ChatGPT":
+            return ChatGPT.ChatGPT
         else:
             raise NotImplementedError
 
