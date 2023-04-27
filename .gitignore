@@ -137,3 +137,6 @@ data/
 # Logs and runs
 wandb/
 lightning_logs/
+
+# DS Store
+.DS_Store
