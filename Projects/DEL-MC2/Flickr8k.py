@@ -1,38 +1,51 @@
-## Specific Imports
+## Standard Libraries
 from PIL import Image
+
+## 3rd Party Libraries
+import torch
 
 ## Specific Imports
 from torch import Generator
 from torch.utils.data import DataLoader, Dataset, random_split
 from torch.utils.data import random_split
 from torchvision import transforms
+from torchvision.datasets import ImageFolder
 from pytorch_lightning import LightningDataModule, LightningDataModule
+from tqdm import tqdm
+from nltk.tokenize import word_tokenize
 
 
 class Flickr8k(Dataset):
     def __init__(self, root, ann_file, transform=None):
         self.root = root
         self.transform = transform
-        self.images = []
-        self.captions = []
+        self.dict = {}
+        self.images = {}
 
-        with open(ann_file, "r") as f:
-            for line in f:
-                image, caption = line.strip().split(";")
-                self.images.append(image)
-                self.captions.append(caption)
+        # read the annotations file
+        ann = open(ann_file, "r", encoding="utf-8").read().split("\n")
+        for line in ann:
+            if len(line):
+                file, caption = line.split(";")
+                if file not in self.dict:
+                    self.dict[file] = [word_tokenize(caption.lower())]
+                else:
+                    self.dict[file].append(word_tokenize(caption.lower()))
+
+        # preload the images
+        for file in tqdm(self.dict):
+            image = Image.open(f"{self.root}/{file}").convert("RGB")
+            if transform:
+                image = transform(image)
+            self.images[file] = image
 
     def __len__(self):
-        return len(self.images)
+        return len(self.dict)
 
     def __getitem__(self, idx):
-        filename = self.images[idx]
-        image = Image.open(f"{self.root}/{filename}").convert("RGB")
-        caption = self.captions[idx]
-        if self.transform:
-            image = self.transform(image)
-
-        return filename, image, caption
+        file, captions = list(self.dict.items())[idx]
+        image = self.images[file]
+        return file, image, captions
 
 
 class DataModuleFlickr8k(LightningDataModule):
@@ -47,6 +60,8 @@ class DataModuleFlickr8k(LightningDataModule):
                 transforms.ToTensor(),
             ]
         )
+
+        preload = self.config is not None
 
         self.data = Flickr8k(
             root="data/images",
