@@ -140,3 +140,7 @@ lightning_logs/
 
 # DS Store
 .DS_Store
+
+# DVCLIVE Metrics
+Projects/*/dvclive
+Projects/*/DvcLiveLogger
