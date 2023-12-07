@@ -137,11 +137,8 @@ data/
 # Logs and runs
 wandb/
 lightning_logs/
+fhnw-del-mc2/
+artifacts/
 
 # DS Store
 .DS_Store
-
-# DVCLIVE Metrics
-Projects/*/dvclive
-Projects/*/DvcLiveLogger
-.dvc
