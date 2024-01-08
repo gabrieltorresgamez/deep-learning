@@ -93,7 +93,7 @@ A child in a pink dress is climbing up a set of stairs in an entry way .
 
 Tokenized caption (with nltk word tokenizer):
 ```
-[<start>', 'A', 'child', 'in', 'a', 'pink', 'dress', 'is', 'climbing', 
+['<start>', 'A', 'child', 'in', 'a', 'pink', 'dress', 'is', 'climbing', 
 'up', 'a', 'set', 'of', 'stairs', 'in', 'an', 'entry', 'way', '.', '<end>', 
 '<pad>', '<pad>', ...]
 ```
