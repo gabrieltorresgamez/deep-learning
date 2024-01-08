@@ -1,0 +1,36 @@
+/*
+ * Gabos modification of the default theme
+ *
+ * @theme chef-gabo
+ * @author Yuki Hattori & Gabriel Torres Gamez
+ *
+ * @auto-scaling true
+ * @size 1920p 1920px 1080px
+ */
+
+@import 'default';
+
+h1 {
+    font-size: 4em;
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+h3 {
+    font-size: 1.5em;
+}
+
+h4 {
+    font-size: 1.2em;
+}
+
+h5 {
+    font-size: 1em;
+}
+
+h6 {
+    font-size: 0.8em;
+}
